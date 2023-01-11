@@ -1,18 +1,18 @@
+import { PuppeteerExtra } from 'puppeteer-extra';
 import * as puppeteer from 'puppeteer';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 const urls: string[] = [
   'https://www.byggmax.se/regel-95x95-p08195095',
   'https://www.byggmax.se/28x120-trall-impregnerad-gr%C3%B6n-p08728120',
 ];
 
-//document.getElementsByClassName('price-wrapper')[0].innerText
-
 const scrape = async (url: string) => {
-  const browser = await puppeteer.launch();
+  const p = new PuppeteerExtra(puppeteer);
+  p.use(StealthPlugin());
+  const browser = await p.launch({ headless: true });
+
   const page = await browser.newPage();
-  await page.setUserAgent(
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.79 Safari/537.36',
-  );
 
   await page.goto(url);
 
