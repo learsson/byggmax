@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "develop": "nodemon src/index.ts"
+    "develop": "nodemon src/index.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

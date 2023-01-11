@@ -15,21 +15,23 @@ const scrape = async (url: string) => {
   const page = await browser.newPage();
 
   await page.goto(url);
-  setTimeout(async () => {
-    const title = await page.evaluate(
-      () => document.querySelector('title')?.innerHTML,
-    );
-    const price = await page.evaluate(() => {
-      const priceEl = document.querySelector('#maincontent *> .price');
-      const priceOreEl = document.querySelector('#maincontent *> .cents-label');
 
-      return priceEl?.innerHTML + ',' + priceOreEl?.innerHTML;
-    });
+  await page.waitForSelector('#maincontent *> .price');
+  await page.waitForSelector('#maincontent *> .cents-label');
 
-    console.log(`${title}: ${price}`);
-    page.close();
-    browser.close();
-  }, 200);
+  const title = await page.evaluate(
+    () => document.querySelector('title')?.innerHTML,
+  );
+  const price = await page.evaluate(() => {
+    const priceEl = document.querySelector('#maincontent *> .price');
+    const priceOreEl = document.querySelector('#maincontent *> .cents-label');
+
+    return priceEl?.innerHTML + ',' + priceOreEl?.innerHTML;
+  });
+
+  console.log(`${title}: ${price}`);
+  page.close();
+  browser.close();
 };
 for (const url of urls) {
   scrape(url);
