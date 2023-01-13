@@ -2,7 +2,6 @@ import { PuppeteerExtra } from 'puppeteer-extra';
 import * as puppeteer from 'puppeteer';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { fileWriter, OutputFormat } from './log-writer';
-import { Browser } from 'puppeteer';
 
 export interface ScraperSiteConfigPriceSelector {
   priceElementSelector: string;
@@ -24,12 +23,14 @@ export interface ScraperOptions {
 export class Scraper {
   private _options: ScraperOptions;
   private _puppeteer: PuppeteerExtra;
+  private _output: OutputFormat;
 
   constructor(options: ScraperOptions) {
     if (!options) {
       throw new Error('No options supplied');
     } else {
       this._options = options;
+      this._output = options.outputType;
     }
     this._puppeteer = new PuppeteerExtra(puppeteer);
     this._puppeteer.use(StealthPlugin());
@@ -81,7 +82,7 @@ export class Scraper {
 
     const logObject = { siteName, url, title, price };
 
-    await fileWriter(logObject);
+    await fileWriter(logObject, this._output);
 
     page.close();
     browser.close();

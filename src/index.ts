@@ -1,8 +1,12 @@
 import { Scraper, ScraperOptions } from './scraper';
+import { server } from './server';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const scraperOptions: ScraperOptions = {
-  outputType: 'csv',
-  scrapeIntervalMS: 5000,
+  outputType: 'json',
+  scrapeIntervalMS: 1200000,
   sites: [
     {
       siteName: 'byggmax',
@@ -28,5 +32,15 @@ const scraperOptions: ScraperOptions = {
 };
 
 const scraper: Scraper = new Scraper(scraperOptions);
+
+if (scraperOptions.outputType === 'json') {
+  server.listen(process.env.PORT, () => {
+    console.log(`API is running at http://localhost:${process.env.PORT}`);
+    console.log(
+      `Access price list on http://localhost:${process.env.PORT}/price-list`,
+    );
+    console.log('Press CTRL-C to stop\n');
+  });
+}
 
 scraper.scrape();
