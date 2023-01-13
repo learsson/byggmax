@@ -1,50 +1,46 @@
-import { PuppeteerExtra } from 'puppeteer-extra';
-import * as puppeteer from 'puppeteer';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { appendFileSync } from 'fs';
-import path from 'path';
+import { Scraper, ScraperOptions } from './scraper';
+import { server } from './server';
+import dotenv from 'dotenv';
 
-const urls: string[] = [
-  'https://www.byggmax.se/regel-95x95-p08195095',
-  'https://www.byggmax.se/28x120-trall-impregnerad-gr%C3%B6n-p08728120',
-];
+dotenv.config();
 
-const writeLog = (productTitle?: string, price?: string) => {
-  const fileName = 'byggmax_priser.csv';
-  const date = new Date().toISOString();
-  const data = `${date};${productTitle};${price}\n`;
-  appendFileSync(path.resolve(__dirname, fileName), data, {
-    encoding: 'utf-8',
-  });
+const scraperOptions: ScraperOptions = {
+  outputType: 'json',
+  scrapeIntervalMS: 1200000,
+  sites: [
+    {
+      siteName: 'byggmax',
+      priceSelector: {
+        priceElementSelector: '#maincontent *> .price',
+        priceFractionElementSelector: '#maincontent *> .cents-label',
+      },
+      urls: [
+        'https://www.byggmax.se/regel-95x95-p08195095',
+        'https://www.byggmax.se/28x120-trall-impregnerad-gr%C3%B6n-p08728120',
+      ],
+    },
+    {
+      siteName: 'k-rauta',
+      priceSelector: {
+        priceElementSelector: '.price-view__sale-price-container',
+      },
+      urls: [
+        'https://www.k-rauta.se/produkt/byggregel-45x220-54m-c24-obehandlad/7340039705716',
+      ],
+    },
+  ],
 };
 
-const scrape = async (url: string) => {
-  const p = new PuppeteerExtra(puppeteer);
-  p.use(StealthPlugin());
-  const browser = await p.launch({ headless: true });
+const scraper: Scraper = new Scraper(scraperOptions);
 
-  const page = await browser.newPage();
-
-  await page.goto(url);
-
-  await page.waitForSelector('#maincontent *> .price');
-  await page.waitForSelector('#maincontent *> .cents-label');
-
-  const title = await page.evaluate(
-    () => document.querySelector('title')?.innerHTML,
-  );
-  const price = await page.evaluate(() => {
-    const priceEl = document.querySelector('#maincontent *> .price');
-    const priceOreEl = document.querySelector('#maincontent *> .cents-label');
-
-    return `${priceEl?.innerHTML}.${priceOreEl?.innerHTML}`;
+if (scraperOptions.outputType === 'json') {
+  server.listen(process.env.PORT, () => {
+    console.log(`API is running at http://localhost:${process.env.PORT}`);
+    console.log(
+      `Access price list on http://localhost:${process.env.PORT}/price-list`,
+    );
+    console.log('Press CTRL-C to stop\n');
   });
-
-  writeLog(title, price);
-  console.log(`${title}: ${price}.-`);
-  page.close();
-  browser.close();
-};
-for (const url of urls) {
-  scrape(url);
 }
+
+scraper.scrape();
